@@ -1,0 +1,9 @@
+{
+  "name": "planning-pane",
+  "label": "Planning Pane",
+  "description": "Planning-file controls for Hermes Desktop.",
+  "version": "1.0.1",
+  "tab": { "hidden": true },
+  "entry": "noop.js",
+  "api": "plugin_api.py"
+}
