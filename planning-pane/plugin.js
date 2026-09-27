@@ -15,7 +15,7 @@ import { host, haptic, usePluginI18n, useValue } from '@hermes/plugin-sdk'
 import { jsx, jsxs } from 'react/jsx-runtime'
 import { useState, useEffect, useCallback } from 'react'
 import {
-  Button, Textarea, ScrollArea, Badge, Tip,
+  Button, Textarea, Badge, Tip,
   cn, Codicon, ROUTES_AREA, PANES_AREA, STATUSBAR_AREAS, PALETTE_AREA
 } from '@hermes/plugin-sdk'
 
@@ -30,14 +30,17 @@ function PlanPage() {
   const [loading, setLoading] = useState(false)
   const [actionMsg, setActionMsg] = useState(null)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (manual) => {
     if (!cwd) return
     setLoading(true); setActionMsg(null)
     try {
-      const r = await pluginCtx.rest('/files', { method: 'POST', body: { dir: cwd } })
+      // dir in the query too, so a build that sends this as GET still resolves.
+      const r = await pluginCtx.rest('/files?dir=' + encodeURIComponent(cwd), { method: 'POST', body: { dir: cwd } })
       setFiles((r && typeof r === 'object') ? r : { task_plan: '', findings: '', progress: '' })
     } catch (e) {
-      host.notify({ kind: 'error', message: t('loadError', { err: String(e) }) })
+      // Auto-load runs on every chat switch: never toast from it, only log.
+      if (manual === true) host.notify({ kind: 'error', message: t('loadError', { err: String(e) }) })
+      else console.warn('[planning-pane] load failed:', e)
     } finally {
       setLoading(false)
     }
@@ -69,7 +72,7 @@ function PlanPage() {
   const content = files[active] || ''
 
   return jsxs('div', {
-    className: 'flex h-full flex-col gap-2 p-3 text-sm max-w-2xl',
+    className: 'flex h-full min-h-0 w-full flex-col gap-2 p-3 text-sm',
     children: [
       // header
       jsxs('div', { className: 'flex items-center justify-between gap-2', children: [
@@ -77,7 +80,7 @@ function PlanPage() {
           jsx('span', { className: 'text-lg', children: '📋' }),
           jsx('span', { className: 'font-medium text-(--ui-text-primary)', children: t('pageTitle') }),
         ]}),
-        jsx(Button, { size: 'sm', variant: 'ghost', onClick: load, disabled: loading, children: loading ? t('loading') : t('refresh') }),
+        jsx(Button, { size: 'sm', variant: 'ghost', onClick: () => load(true), disabled: loading, children: loading ? t('loading') : t('refresh') }),
       ]}),
 
       // tabs
@@ -93,13 +96,10 @@ function PlanPage() {
       loading
         ? jsx('div', { className: 'flex-1 flex items-center justify-center text-(--ui-text-tertiary)', children: t('loading') })
         : content
-            ? jsx(ScrollArea, {
-                className: 'flex-1 overflow-auto rounded border bg-(--chrome-base-background) min-h-0',
-                children: jsx(Textarea, {
-                  value: content, readOnly: true,
-                  className: 'w-full min-h-[180px] resize-none bg-transparent p-3 text-sm leading-relaxed text-(--ui-text-primary) focus:outline-none',
-                  spellCheck: false,
-                })
+            ? jsx(Textarea, {
+                value: content, readOnly: true,
+                className: 'w-full flex-1 min-h-0 resize-none overflow-auto rounded border bg-(--chrome-base-background) p-3 text-sm leading-relaxed text-(--ui-text-primary) focus:outline-none',
+                spellCheck: false,
               })
             : jsx('div', { className: 'flex-1 flex flex-col items-center justify-center gap-2 text-(--ui-text-tertiary)', children: [
                 jsx('span', { className: 'text-3xl', children: '📄' }),

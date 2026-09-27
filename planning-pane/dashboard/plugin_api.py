@@ -6,7 +6,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 router = APIRouter()
 _FILE_NAMES = ("task_plan.md", "findings.md", "progress.md")
@@ -67,9 +67,16 @@ def _run(script_name: str, workspace: Path) -> dict[str, object]:
     }
 
 
-@router.post("/files")
-async def files(body: dict) -> dict[str, str]:
-    workspace = _workspace(body.get("dir"))
+@router.api_route("/files", methods=["GET", "POST"])
+async def files(request: Request, dir: str | None = None) -> dict[str, str]:
+    # GET too: an older desktop plugin/build sends GET, which otherwise falls through to
+    # the headless catch-all ("web UI disabled") on every chat switch.
+    if dir is None and request.method == "POST":
+        try:
+            dir = ((await request.json()) or {}).get("dir")
+        except ValueError:
+            dir = None
+    workspace = _workspace(dir)
     result: dict[str, str] = {}
     for filename in _FILE_NAMES:
         path = workspace / filename
