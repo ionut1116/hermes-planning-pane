@@ -8,7 +8,8 @@
  * Reads task_plan.md / findings.md / progress.md from the workspace cwd
  * and exposes the skill's init / check-complete / attest scripts as buttons.
  *
- * Disk plugin:  ~/.hermes/desktop-plugins/planning-pane/plugin.js
+ * Disk plugin:  <app hermes home>/desktop-plugins/planning-pane/plugin.js
+ *               (the app copies it here from this package's desktop/ folder)
  * Backend:      ~/.hermes/plugins/planning-pane/dashboard/plugin_api.py
  */
 import { host, haptic, usePluginI18n, useValue } from '@hermes/plugin-sdk'

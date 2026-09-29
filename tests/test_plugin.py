@@ -4,7 +4,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT / "planning-pane/dashboard/plugin_api.py"
-FRONTEND = ROOT / "planning-pane/plugin.js"
+FRONTEND = ROOT / "planning-pane/desktop/plugin.js"
 
 spec = spec_from_file_location("planning_pane_test", BACKEND)
 module = module_from_spec(spec)
